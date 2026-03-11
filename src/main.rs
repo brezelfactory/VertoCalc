@@ -1,31 +1,56 @@
 use std::io;
-use std::f64::consts::PI;
+
+fn read_positive_number(prompt: &str, allow_zero: bool) -> f64 {
+    loop {
+        println!("{}", prompt);
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Nie udalo sie odczytac danych");
+
+        // Accept both comma and dot decimals
+        let cleaned = input.trim().replace(',', ".");
+
+        match cleaned.parse::<f64>() {
+            Ok(num) => {
+                if num < 0.0 {
+                    println!("Wartość nie może być ujemna. Spróbuj ponownie.\n");
+                } else if !allow_zero && num == 0.0 {
+                    println!("Wartość musi być większa niż zero. Spróbuj ponownie.\n");
+                } else {
+                    return num;
+                }
+            }
+            Err(_) => {
+                println!("Nieprawidłowa liczba. Spróbuj ponownie.\n");
+            }
+        }
+    }
+}
 
 fn main() {
-    let mut input = String::new();
+    // Radius must be > 0
+    let radius = read_positive_number("Wprowadź promień:", false);
 
-    // Ask for radius
-    println!("Enter radius:");
-    io::stdin().read_line(&mut input).expect("Failed to read input");
-    let radius: f64 = input.trim().parse().expect("Please enter a number");
+    // Chord must be >= 0 and <= diameter
+    let chord = loop {
+        let c = read_positive_number("Wprowadź cięciwę:", true);
 
-    input.clear();
+        if c <= 2.0 * radius {
+            break c;
+        } else {
+            println!("Cięciwa nie może być większa niż średnica (2 * promień). Spróbuj ponownie.\n");
+        }
+    };
 
-    // Ask for chord
-    println!("Enter chord:");
-    io::stdin().read_line(&mut input).expect("Failed to read input");
-    let chord: f64 = input.trim().parse().expect("Please enter a number");
-
-    // Calculate alpha (radians)
-    let alpha = 2.0 * (chord / (2.0 * radius)).asin().to_degrees(); // Convert to degrees
+    // Alpha in degrees
+    let alpha = 2.0 * (chord / (2.0 * radius)).asin();
 
     // Arc length
-    let length = radius * alpha * PI / 180.0;
+    let length = radius * alpha;
 
-    println!("Arc length: {}", length);
+    println!("Szukana długość łuku to: {:.4}", length);
+    println!("\nWciśnij Enter aby wyjść...");
 
-    // Wait before closing
-    println!("Press Enter to exit...");
     let mut exit = String::new();
     io::stdin().read_line(&mut exit).unwrap();
 }
